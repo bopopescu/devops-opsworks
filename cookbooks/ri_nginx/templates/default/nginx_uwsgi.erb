@@ -1,0 +1,127 @@
+# <%= @app %>_nginx.conf
+
+
+# the upstream component nginx can connect to
+upstream django {
+    # for a file socket
+    # server unix://<%= @app_dir %>/<%= @app %>.sock;
+    <% if @uwsgi_servers.empty? -%>
+        # waiting for upstream to get online
+        # dummy server so nginx restart is ok
+        server 0.0.0.0:8000;
+    <% else -%>
+    <% @uwsgi_servers.each do |instance_name, instance| -%>
+        server <%= instance[:private_ip] %>:8000;
+    <% end -%>
+    <% end -%>
+    }
+
+
+<% if node[:cloud][:nginx_lb_uwsgi] and @uwsgi_location == :remote -%>
+upstream nginx {
+    <% if @uwsgi_servers.empty? -%>
+        # waiting for upstream to get online
+        # dummy server so nginx restart is ok
+        server 0.0.0.0:80;
+    <% else -%>
+    <% @uwsgi_servers.each do |instance_name, instance| -%>
+        server <%= instance[:private_ip] %>:80;
+    <% end -%>
+    <% end -%>
+    }
+<% end -%>
+
+
+# only our app domain is allowed
+# other domains get an error status
+server {
+    if ($request_method !~ ^(GET|HEAD|POST|PUT)$ ) {
+        return 444;
+    }
+
+    location /healthcheck {
+        return 200;
+    }
+
+    location /nginx_status {
+      stub_status on;
+      access_log off;
+      allow 127.0.0.1;
+      deny all;
+    }
+
+    location / {
+        return 404;
+    }
+}
+
+
+# configuration of the server
+server {
+    # the port your site will be served on
+    listen 80;
+
+    # the domain name it will serve for
+    # your machine's IP address or FQDN
+    server_name <%= @app_domain %>;
+    
+    charset utf-8;
+    access_log /var/log/nginx/<%= @app %>_access.log;
+    error_log /var/log/nginx/<%= @app %>_error.log debug;    
+
+    # max upload size
+    client_max_body_size 1M;
+
+<% if node[:cloud][:nginx_lb_uwsgi] and @uwsgi_location == :remote -%>
+    location /static/admin/ {
+        proxy_pass http://nginx/static/admin/;
+        proxy_cache static_content;
+        proxy_cache_valid  200  60m;
+        proxy_cache_valid  302   1m;
+        proxy_cache_valid  404   1m;
+        proxy_cache_use_stale error timeout invalid_header http_500;      
+        include /etc/nginx/proxy_params;
+    }
+<% else -%>
+    location /profiles {
+        alias <%= @app_dir %>/profiles;
+        autoindex on;
+    }
+
+    location /static {
+        alias <%= @app_dir %>/static;
+    }
+<% end -%>
+
+
+<% if node[:nginx][:caching_proxy][:enable] -%>
+    location /game/data/get_game_static_data/ {
+        uwsgi_pass django;
+        uwsgi_cache static_uwsgi;
+        uwsgi_cache_key $host$request_uri;
+        uwsgi_cache_valid  200   10m;
+        uwsgi_cache_valid  302   1m;
+        uwsgi_cache_valid  404   1m;
+        uwsgi_cache_min_uses  1;
+        uwsgi_cache_use_stale error  timeout invalid_header http_500;
+        include /etc/nginx/uwsgi_params;
+    }
+    
+    location /game/data/get_content_bundles_data/ {
+        uwsgi_pass django;
+        uwsgi_cache static_uwsgi;
+        uwsgi_cache_key $host$request_uri;
+        uwsgi_cache_valid  200   10m;
+        uwsgi_cache_valid  302   1m;
+        uwsgi_cache_valid  404   1m;
+        uwsgi_cache_min_uses  1;
+        uwsgi_cache_use_stale error  timeout invalid_header http_500;
+        include /etc/nginx/uwsgi_params;
+    }
+ <% end -%>
+
+    location / {
+        uwsgi_pass django;
+        include /etc/nginx/uwsgi_params; 
+    }
+}

@@ -1,0 +1,7 @@
+proxy_cache_path <%= node[:nginx][:proxy_cache_dir] %>/static_content levels=1 keys_zone=static_content:8m max_size=100m inactive=60m;
+proxy_temp_path <%= node[:nginx][:proxy_temp_dir] %>;
+
+uwsgi_cache_path   <%= node[:nginx][:proxy_cache_dir] %>/static_uwsgi  
+                       levels=1
+                       keys_zone=static_uwsgi:8m
+                       inactive=5m;
