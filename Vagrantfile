@@ -114,7 +114,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       # You may also specify custom JSON attributes:
       require_relative 'custom_json' 
       include Rawiron::CustomJson
-      chef.json = Rawiron::CustomJson.drone
+      chef.json = Rawiron::CustomJson.cards
 
     end
 
