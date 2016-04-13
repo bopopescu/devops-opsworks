@@ -1,0 +1,63 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          riak
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts riak node
+# Description:       starts riak using start-stop-daemon
+### END INIT INFO
+
+PATH=/usr/local/riak/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+AS_RIAK="su riak -c"
+DAEMON=/usr/local/riak/bin/riak
+DAEMON_OPTS=""
+DAEMON_PID="/var/run/riak.pid"
+NAME=riak
+DESC=riak
+
+# Include riak defaults if available
+if [ -f /etc/default/riak ]; then
+	. /etc/default/riak
+fi
+
+test -x $DAEMON || exit 0
+
+set -e
+
+. /lib/lsb/init-functions
+
+
+case "$1" in
+	start)
+		echo -n "Starting $DESC: "
+		# Check if the ULIMIT is set in /etc/default/riak
+		if [ -n "$ULIMIT" ]; then
+			# Set the ulimits
+			ulimit $ULIMIT
+		fi
+		$AS_RIAK "$DAEMON start" || true
+		echo "$NAME."
+		;;
+
+	stop)
+		echo -n "Stopping $DESC: "
+		$AS_RIAK "$DAEMON stop" || true
+		echo "$NAME."
+		;;
+
+	restart)
+		echo -n "Restarting $DESC: "
+		$AS_RIAK "$DAEMON restart" || true
+		echo "$NAME."
+		;;
+
+	*)
+		echo "Usage: $NAME {start|stop|restart}" >&2
+		exit 1
+		;;
+esac
+
+exit 0
