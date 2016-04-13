@@ -1,0 +1,7 @@
+# uWSGI script for hosted app
+
+description "uwsgi <%= @app_name %> instance"
+start on runlevel [2345]
+stop on runlevel [06]
+
+exec uwsgi --ini "<%= @app_ini %>"

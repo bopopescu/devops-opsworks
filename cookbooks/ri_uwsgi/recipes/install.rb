@@ -1,0 +1,1 @@
+include_recipe "ri_uwsgi::install_from_source"

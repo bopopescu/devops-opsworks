@@ -1,0 +1,58 @@
+[uwsgi]
+
+
+##
+# Django-related settings
+##
+pythonpath = <%= @app_dir %>
+# the base directory (full path)
+chdir = <%= @app_dir %>
+# either Django's wsgi file
+module = wsgi
+# or set wsgi handler here
+#env = DJANGO_SETTINGS_MODULE=<%= @app %>.settings
+#module = django.core.handlers.wsgi:WSGIHandler()
+
+# the virtualenv (full path)
+# home = <%= @app_dir %>
+
+
+##
+# process-related settings
+##
+master = true
+uid = <%= @app_user %>
+gid = <%= @app_group %>
+
+# maximum number of worker processes
+processes = <%= node[:uwsgi][:processes] %>
+threads = <%= node[:uwsgi][:threads] %>
+
+stats = <%= @stats_path %>
+pidfile = /var/run/uwsig-<%= @app %>-master.pid
+# respawn processes taking more than x seconds
+harakiri = <%= node[:uwsgi][:harakiri] %>
+
+# WARNING - do not use this parameter
+# => crashed 64-bit build
+# limit the project to 256 MB
+#limit-as = 256
+
+# respawn processes after serving N requests
+<% randomize_requests = rand(15000) -%>
+max-requests = <%= node[:uwsgi][:max_requests] + randomize_requests %> 
+# background the process & log
+daemonize = /var/log/uwsgi/<%= @app %>.log 
+
+# increase net buffer, default 4096 is too small
+buffer-size = 65535
+post-buffering 65536
+
+socket = <%= @socket %>
+# the socket - use the full path to be safe
+#socket = <%= @app_dir %>/<%= @app %>.sock
+# ... with appropriate permissions - may be needed
+# chmod-socket = 0664
+
+# clean environment on exit
+vacuum = <%= node[:uwsgi][:vacuum] %> 

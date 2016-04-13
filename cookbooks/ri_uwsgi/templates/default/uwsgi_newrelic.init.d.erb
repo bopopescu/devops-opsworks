@@ -1,0 +1,92 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          uwsgi
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts the uwsgi web server
+# Description:       starts uwsgi using start-stop-daemon
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+<% if node[:uwsgi][:newrelic_monitor][:enable] -%>
+NEW_RELIC_CONFIG_FILE=/etc/newrelic/newrelic.ini
+export NEW_RELIC_CONFIG_FILE
+
+NEW_RELIC_ADMIN="/usr/local/bin/newrelic-admin run-program"
+NEW_RELIC_OPTS="--enable-threads --single-interpreter"
+<% else -%>
+NEW_RELIC_ADMIN=""
+NEW_RELIC_OPTS=""
+<% end -%>
+
+
+DAEMON="/usr/local/bin/uwsgi"
+DAEMON_PID="/var/run/uwsgi-<%= @app_name %>-master.pid"
+<% if node[:cloud][:my_cpu] > 4 -%>
+DAEMON_OPTS="--thunder-lock --ini <%= @app_ini %> --pidfile $DAEMON_PID"
+<% else -%>
+DAEMON_OPTS="--ini <%= @app_ini %> --pidfile $DAEMON_PID"
+<% end -%>
+NAME=uwsgi
+DESC=uwsgi
+
+# Include uwsgi defaults if available
+if [ -f /etc/default/uwsgi ]; then
+	. /etc/default/uwsgi
+fi
+
+test -x $DAEMON || exit 0
+
+set -e
+
+. /lib/lsb/init-functions
+
+
+case "$1" in
+	start)
+		echo -n "Starting $DESC: "
+		# Check if the ULIMIT is set in /etc/default/uwsgi
+		if [ -n "$ULIMIT" ]; then
+			# Set the ulimits
+			ulimit $ULIMIT
+		fi
+		start-stop-daemon --start --quiet --pidfile $DAEMON_PID \
+		    --startas $NEW_RELIC_ADMIN $DAEMON -- $DAEMON_OPTS $NEW_RELIC_OPTS || true
+		echo "$NAME."
+		;;
+
+	stop)
+		echo -n "Stopping $DESC: "
+		start-stop-daemon --stop --signal INT --quiet --pidfile $DAEMON_PID || true
+		echo "$NAME."
+		;;
+
+	restart|force-reload)
+		echo -n "Restarting $DESC: "
+		$0 stop
+		sleep 3
+		$0 start
+		echo "$NAME."
+		;;
+
+	reload)
+		echo -n "Reloading $DESC configuration: "
+		start-stop-daemon --stop --signal HUP --quiet --pidfile $DAEMON_PID \
+		    --exec $DAEMON || true
+		echo "$NAME."
+		;;
+
+	status)
+		status_of_proc -p $DAEMON_PID "$DAEMON" uwsgi && exit 0 || exit $?
+		;;
+	*)
+		echo "Usage: $NAME {start|stop|restart|reload|force-reload|status}" >&2
+		exit 1
+		;;
+esac
+
+exit 0
