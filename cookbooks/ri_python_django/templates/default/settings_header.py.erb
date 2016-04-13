@@ -1,0 +1,10 @@
+from settings import *
+
+DEBUG = False
+TEMPLATE_DEBUG = DEBUG
+
+
+ALLOWED_HOSTS = [
+    "<%= @domain %>", # Allow domain
+    "<%= @domain %>.", # Also allow FQDN
+]

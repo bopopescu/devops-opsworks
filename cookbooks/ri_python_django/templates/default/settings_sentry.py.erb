@@ -1,0 +1,27 @@
+<% if node[:django][:sentry][:enable] -%>
+
+INSTALLED_APPS += (
+    'raven.contrib.django.raven_compat',
+)
+
+LOGGING.update({
+    'disable_existing_loggers': True,
+    'root': {
+        'level': 'INFO',
+        'handlers': ['sentry'],
+    }
+})
+
+LOGGING['handlers'].update({
+    'sentry': {
+        'level': 'INFO',
+        'class':
+        'raven.contrib.django.raven_compat.handlers.SentryHandler',
+    }
+})
+
+RAVEN_CONFIG = {
+    'dsn': 'https://0e52dbc374d410a9b506f6945:b42b018422a07e06a8b1a@app.getsentry.com/11085',
+}
+
+<% end -%>

@@ -1,0 +1,29 @@
+<% if not @mysql.empty? and not @databases.empty?-%>
+DATABASES = {
+        <% @databases.each do |db| -%>
+        "<%= db[:alias] %>": {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': "<%= db[:name] %>",
+            'USER': "<%= @mysql[:username] %>",
+            'PASSWORD': "<%= @mysql[:password] %>",
+            'HOST': "<%= @mysql[:host] %>",
+            'PORT': "<%= @mysql[:port] %>",
+		    <% if db[:options] -%>
+            'OPTIONS': <%= db[:options] %>,  # like { 'init_command': 'SET storage_engine=MyISAM;' }
+		    <% end -%>
+        },
+        <% end -%>
+}
+<% end -%>
+
+
+<% if @sqlite and not @databases.empty? -%>
+DATABASES = {
+    <% @databases.each do |db| -%>
+    "<%= db[:alias] %>": {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': "<%= node[:django][:sqlite][:data] %>/<%= db[:name] %>.db"
+    },
+    <% end -%>
+}
+<% end -%>

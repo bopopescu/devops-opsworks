@@ -1,0 +1,39 @@
+<% if not @stack[:db_servers].empty? -%>
+<% if @stack[:db_servers][:type] == "nosql" -%>
+
+
+<% if  @stack[:db_servers][:engine] == "riak" and not @riak.empty? -%>
+
+NOSQL_BACKENDS = {
+    'default': {
+        'type': 'fts_core.nosql.backends.riakbackend.RiakBackend',
+        'nodes': [
+        <% @riak.each do |instance_name, instance| -%>
+        <% if instance -%>
+		{
+				'host':'<%= instance[:private_ip] %>',
+				'http_port': '8098',
+				'pb_port': '8087',
+		},
+        <% end -%>
+        <% end -%>
+        ],
+	'protocol': 'pbc'
+    },
+}
+
+
+<% elsif @stack[:db_servers][:engine] == "memcache_api" and not @memcached.empty? -%>
+
+NOSQL_BACKENDS = {
+   'default': {
+       'type': 'fts_core.nosql.backends.cachebackend.CacheBackend',
+       'backend': 'default'
+   }
+}
+
+<% end -%>
+
+
+<% end -%>
+<% end -%>

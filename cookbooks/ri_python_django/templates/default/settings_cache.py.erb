@@ -1,0 +1,13 @@
+<% if not @memcached.empty? -%>
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': [
+        <% @memcached.each do |instance_name, instance| -%>
+            "<%= instance[:private_ip] %>:11211",
+        <% end -%>
+        ],
+		'TIMEOUT': 3600 * 24
+    },
+}
+<% end -%>
