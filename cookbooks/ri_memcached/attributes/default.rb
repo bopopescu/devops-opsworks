@@ -1,0 +1,1 @@
+default[:twmemcached][:memory] = "#{(node[:cloud][:my_user_memory] * 0.7).to_int}M"
