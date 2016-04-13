@@ -1,0 +1,28 @@
+package rawiron.settings
+
+
+object LoadbalancerSettings 
+{
+	val LOADBALANCED = false
+	val LOADBALANCER = "<%= node[:cloud][:loadbalancer_address] %>"
+	val _BASE_URLS = Array(
+	<% node[:gatling][:webservers].each do |webserver| -%>
+		"http://<%= webserver %>:80",
+	<% end -%>
+	)
+
+	def BASE_URL: String = {
+		if (LOADBALANCED) {
+		  import scala.util.Random
+			val RNG = new Random
+			val picked_url = RNG.nextInt(_BASE_URLS.length)
+			return http_for(_BASE_URLS(picked_url))
+		} else {
+			return http_for(LOADBALANCER)
+		}
+	}
+
+	def http_for(server_address: String): String = {
+		"http://" + server_address + ":80"
+	}
+}

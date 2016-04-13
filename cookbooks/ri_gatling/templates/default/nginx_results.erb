@@ -1,0 +1,21 @@
+
+server {
+    #listen   80; ## listen for ipv4; this line is default and implied
+    #listen   [::]:80 default ipv6only=on; ## listen for ipv6
+
+    root <%= @app_dir %>;
+    index index.html index.htm;
+
+    # Make site accessible from
+    server_name <%= @app_domain %>;
+
+    location / {
+        autoindex on;
+        
+        # First attempt to serve request as file, then
+        # as directory, then fall back to index.html
+        try_files $uri $uri/ /index.html;
+        
+        #include /etc/nginx/naxsi.rules;
+    }
+}
