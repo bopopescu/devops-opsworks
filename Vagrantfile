@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "precise32"
+  config.vm.box = "ubuntu/trusty32"
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
@@ -84,11 +84,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # some recipes and/or roles.
   #
     config.vm.provision :shell, :inline =>
-          'apt-get update; apt-get install build-essential -y'
+          'apt-get update; apt-get install build-essential ruby1.9.1-dev --no-upgrade --yes'
     config.vm.provision :shell, :inline =>
-          'apt-get update; apt-get install ruby1.9.1-dev --no-upgrade -y'
-    config.vm.provision :shell, :inline => 
-          "gem install chef --version 11.4.4 --no-rdoc --no-ri --conservative"
+          "gem install mixlib-shellout --version 1.4.0 --no-rdoc --no-ri --conservative"
+    config.vm.provision :shell, :inline =>
+          "gem install highline --version 1.6.21 --no-rdoc --no-ri --conservative"
+    config.vm.provision :shell, :inline =>
+          "gem install ohai --version 7.4 --no-rdoc --no-ri --conservative"
+    config.vm.provision :shell, :inline =>
+          "gem install chef --version 11.18.12 --no-rdoc --no-ri --conservative"
 
     config.vm.provision :chef_solo do |chef|
       chef.cookbooks_path = ["../opsworks-cookbooks", "./cookbooks"]
@@ -97,7 +101,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       require_relative 'runlist' 
       include Rawiron::Runlist
-      runlist = Rawiron::Runlist.nginx
+      runlist = Rawiron::Runlist.uwsgi
       
       runlist.each do |recipe|
         chef.add_recipe recipe
