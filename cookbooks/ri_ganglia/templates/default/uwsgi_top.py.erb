@@ -1,0 +1,157 @@
+import socket
+import time
+import sys
+import traceback
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
+
+def human_size(n):
+    # G
+    if n >= (1024*1024*1024): 
+        return "%.1fG" % (n/(1024*1024*1024))
+    # M
+    if n >= (1024*1024):
+        return "%.1fM" % (n/(1024*1024))
+    # K
+    if n >= 1024:
+        return "%.1fK" % (n/1024)
+    return "%d" % n
+
+
+def exc_hook(type, value, tb):
+    traceback.print_exception(type, value, tb)
+
+
+def socket_family(addr):
+    if ':' in addr:
+        return socket.AF_INET
+    else:
+        return socket.AF_UNIX
+
+def socket_address(addr):
+    if socket_family(addr) == socket.AF_INET:
+        addr_parts = addr.split(':')
+        addr_tuple = (addr_parts[0], int(addr_parts[1]))
+    else:
+        addr_tuple = addr
+    return addr_tuple
+
+def frequency():
+    return 3
+
+
+def reqcount(a, b):
+    if a['requests'] > b['requests']:
+        return -1
+    if a['requests'] < b['requests']:
+        return 1
+    return 0
+
+def calc_percent(tot, req):
+    if tot == 0:
+        return 0.0
+    return (100 *float(req))/float(tot)
+
+def calc_metrics(status):
+    pass
+
+
+def format_header(status):
+    uversion = ''
+    if 'version' in status:
+        uversion = '-' + status['version']
+
+    cwd = ""
+    if 'cwd' in status:
+        cwd = "- cwd: %s" % status['cwd'] 
+
+    uid = ""
+    if 'uid' in status:
+        uid = "- uid: %d" % status['uid'] 
+
+    gid = ""
+    if 'gid' in status:
+        gid = "- gid: %d" % status['gid'] 
+
+    masterpid = ""
+    if 'pid' in status:
+        masterpid = "- masterpid: %d" % status['pid'] 
+
+    return "node: %s uwsgi%s %s %s %s %s" % (socket.gethostname(), uversion, cwd, uid, gid, masterpid)
+
+
+def format_workers(listen_queue, workers):
+    lines = []
+    tot = sum( [worker['requests'] for worker in workers] )
+    tx = human_size(sum( [worker['tx'] for worker in workers] ))
+    workers_summary = "%s - req: %d - lq: %d - tx: %s" % (time.ctime(), tot, listen_queue, tx)
+    lines.append(workers_summary)
+
+    workers.sort(reqcount)
+    for worker in workers:
+        sigs = 0
+        wtx = human_size(worker['tx'])
+
+        wrunt = worker['running_time']/1000
+        if wrunt > 9999999:
+            wrunt = "%sm" % str(wrunt / (1000*60))
+        else:
+            wrunt = str(wrunt)
+            
+        if 'signals' in worker:
+            sigs = worker['signals']
+                
+        worker_status = " %d\t%.1f\t%d\t%d\t%d\t%d\t%s\t%dms\t%s\t%s\t%s\t%s" % (
+            worker['id'], calc_percent(tot, worker['requests']), worker['pid'], 
+            worker['requests'], worker['exceptions'], sigs, worker['status'],
+            worker['avg_rt']/1000, human_size(worker['rss']), human_size(worker['vsz']),
+            wtx, wrunt)
+
+        lines.append(worker_status)
+    return lines
+
+
+def read_status(sfamily, addr_tuple):
+    js = ''
+
+    try:
+        s = socket.socket(sfamily, socket.SOCK_STREAM)
+        s.connect(addr_tuple)
+
+        while True:
+            data = s.recv(4096)
+            if len(data) < 1:
+                break
+            js += data
+    except:
+        raise Exception("unable to get uWSGI statistics")
+    finally:
+        s.close()
+
+    return json.loads(js)
+
+
+
+sys.excepthook = exc_hook
+
+addr = "/var/log/uwsgi/sstat.sock"
+freq = frequency()
+addr_tuple = socket_address(addr)
+sfamily = socket_family(addr)
+
+while True:
+    dd = read_status(sfamily, addr_tuple)
+    print format_header(dd)
+    
+    if 'workers' in dd:
+        if not 'listen_queue' in dd:
+            dd['listen_queue'] = 0
+        lines = format_workers(dd['listen_queue'], dd['workers'])
+        for line in lines:
+            print line
+
+    time.sleep(freq)

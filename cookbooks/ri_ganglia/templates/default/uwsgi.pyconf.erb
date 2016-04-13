@@ -1,0 +1,61 @@
+#
+
+modules {
+  module {
+    name = 'uwsgi'
+    language = 'python'
+
+    param status_url {
+      value = '/var/log/uwsgi/sstatus.socket'
+    }
+    param refresh_rate {
+      value = '9'
+    }
+  }
+}
+
+collection_group {
+  collect_once = yes
+  time_threshold = 60
+
+  metric {
+    name = 'uwsgi_server_version'
+    title = "Uwsgi Version"
+  }
+}
+
+
+collection_group {
+  collect_every = 10
+  time_threshold = 60
+
+  metric {
+    name = "uwsgi_requests"
+    title = "Total Requests"
+    value_threshold = 10.0
+  }
+
+  metric {
+    name = "uwsgi_total_requests_rate"
+    title = "Request Rate"
+    value_threshold = 10.0
+  }
+
+  metric {
+    name = "uwsgi_listen_queue"
+    title = "Listen Queue"
+    value_threshold = 10.0
+  }
+
+  metric {
+    name = "uwsgi_average_response_time"
+    title = "Average response time"
+    value_threshold = 10.0
+  }
+  
+  metric {
+    name = "uwsgi_max_response_time"
+    title = "Max response time"
+    value_threshold = 10.0
+  }
+}
