@@ -1,0 +1,41 @@
+[
+{
+    "pk": 1, 
+    "model": "permissions.cidr", 
+    "fields": {
+        "require_credentials": true, 
+        "cidr": "<your-ip>", 
+        "label": "Office"
+    }
+},
+{
+    "pk": 0, 
+    "model": "auth.user", 
+    "fields": {
+        "username": "admin", 
+        "first_name": "", 
+        "last_name": "", 
+        "is_active": true, 
+        "is_superuser": true, 
+        "is_staff": true, 
+        "last_login": "2013-12-05T01:24:31.323Z", 
+        "groups": [], 
+        "user_permissions": [], 
+        "password": "<your-admin-password>", 
+        "email": "<some-user>@<your-domain>.com", 
+        "date_joined": "2013-12-05T01:23:34.193Z"
+    }
+},
+{
+    "pk": 1, 
+    "model": "permissions.credential", 
+    "fields": {
+        "access_key": "<your-access>", 
+        "comment": "Office", 
+        "created": "2013-12-05T01:25:05.315Z", 
+        "deactivated": null, 
+        "creator": 0, 
+        "secret_key": "<your-secret>"
+    }
+}
+]
