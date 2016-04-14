@@ -1,7 +1,11 @@
 # Custom Chef Recipes for Amazon Opsworks
 
-In case you use ELB as a loadbalancer and a fixed number of database servers these scripts are of little help.
+* These scripts were coded to load test various infrastructure configurations.
+For example *Nginx* as a Loadbalancer, or *Basho-Riak* as a database server.
+* The application servers run Python-Django.
+* _cookbooks_ are written as wrappers around the underlying cookbooks from [Supermarket](https://supermarket.chef.io/).
 
+In case you use ELB as a loadbalancer and a fixed number of database servers these scripts are of little help.
 Or as a picture, if your stack looks like this:
 ```
                    ELB
@@ -15,15 +19,11 @@ Or as a picture, if your stack looks like this:
              Database Server                 
 ```
 
-* These scripts were coded to load test various infrastructure configurations.
-For example *Nginx* as a Loadbalancer, or *Basho-Riak* as a database server.
-* The application servers run Python-Django.
-* _cookbooks_ are written as wrappers around the underlying cookbooks from [Supermarket](https://supermarket.chef.io/).
-
 #### Features
 * elastic scaling - add and remove any instance in any layer without the need of manual changes in configuration files and re-deploy of those files
-* restart all instances in a layer
-* drop all data and re-create the databases with fixtures
+* run "commands"
+	* restart all instances in a layer
+	* drop all data and re-create the databases with fixtures
 * deploy *Gatling* for Stress- and Loadtest - for example *Gatling* uses the configured Loadbalancer
 
 #### Not supported
@@ -32,7 +32,6 @@ For example *Nginx* as a Loadbalancer, or *Basho-Riak* as a database server.
 
 #### How it works
 1. Opsworks has the concept of *life cycle events* which trigger *custom Chef recipes*.
-In Opsworks *custom Chef recipes* can be called for every *life cycle event*.
 
 2. Information about the *layers* and *instances* is provided at runtime by Opsworks.
 ```ruby
@@ -42,9 +41,21 @@ this_node = node[:cloud][:this_node]
 my_layer = node[:cloud][:my_layer]
 ```
 
-The solution combines the two.
+3. Deployment of an appliction generates the `deploy` *life cycle event* and the name of the application is available at runtime
+```ruby
+applications = node[:deploy]
+applications.each do |app_name, deploy_info|
+	...
+end
+```
+
+
+##### elastic scaling
 Whenever a *life cycle event* occurs on a *layer* a *custom recipe* is called on each *instance* of the *layer*.
 The *custom recipe* reads the information of the current instances in all layers and for example uses this information to re-write a configuration file, to deploy the file and to restart an application server.
+
+##### commands
+To add a new "command" a new application is setup in Opsworks and code is added to run the appropriate *custom recipe* for `deploy`.
 
 
 ## Get Started
