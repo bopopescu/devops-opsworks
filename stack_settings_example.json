@@ -1,0 +1,43 @@
+{
+"rawiron": {"app": "racing",
+            "app_domain": "Racing-2055265975.us-west-2.elb.amazonaws.com",
+            "app_type": "python-django",
+            "deploy_delegate": {
+                            "races": "release",
+                            "resetdatabases": "init_data",
+                            "resetstaticdatabase": "init_static",
+                            "restartall": "restart_all",
+                            "restartnginx": "restart_nginx",
+                            "restartuwsgi": "restart_uwsgi",
+                            "restartmysql": "restart_mysql",
+                            "gatling": "load_testing",
+                            "loadscenarios": "load_scenarios"
+                           },
+            "stack": { "loadbalancer": "nginx",
+                       "db_servers": {"layer": "app", "engine": "sqlite"},
+                       "cache_servers": {"layer": "app", "engine": "memcached"}
+                     },
+            "services": {"facebook": "default", 
+                         "friends": "default"
+                        }
+          },
+
+"nginx": [ {"route": "/admin/static/", "caching_proxy": {"enable": true}},
+           {"route": "/static/", "caching_proxy": {"enable": true}}
+         ],
+
+"django": { "app": "racing",
+            "settings": "local_settings_nosql_memcached",
+            "databases": [{"alias": "default", 
+                           "name": "races", 
+                           "options": "{'init_command': 'SET storage_engine=MyISAM;'}" },
+                          {"alias": "static_game_data", 
+                           "name": "racesstatic"}],
+            "sentry": {"enable": true}
+          },
+
+"riak": { "config": {"riak_core": {"ring_creation_size": 16},
+                     "bitcask": {"merge_window": "never"}
+                    }
+        }
+}
