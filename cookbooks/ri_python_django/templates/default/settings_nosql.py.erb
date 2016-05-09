@@ -6,7 +6,7 @@
 
 NOSQL_BACKENDS = {
     'default': {
-        'type': 'fts_core.nosql.backends.riakbackend.RiakBackend',
+        'type': 'game_core.nosql.backends.riakbackend.RiakBackend',
         'nodes': [
         <% @riak.each do |instance_name, instance| -%>
         <% if instance -%>
@@ -27,7 +27,7 @@ NOSQL_BACKENDS = {
 
 NOSQL_BACKENDS = {
    'default': {
-       'type': 'fts_core.nosql.backends.cachebackend.CacheBackend',
+       'type': 'game_core.nosql.backends.cachebackend.CacheBackend',
        'backend': 'default'
    }
 }

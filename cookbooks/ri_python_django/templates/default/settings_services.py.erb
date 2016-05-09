@@ -1,0 +1,73 @@
+if INSTALLED_APPS == None:
+	INSTALLED_APPS = ()
+
+<% if @services_requested.any? { |id,impl| id.start_with?("user:") } -%>
+if 'game_core.services' not in INSTALLED_APPS:
+	INSTALLED_APPS += ('game_core.services',)
+<% end -%>
+
+<% if @services_requested.value?("nosql") -%>
+if 'game_core.nosql' not in INSTALLED_APPS:
+	INSTALLED_APPS += ('game_core.nosql',)
+<% end -%>
+
+
+
+<% @services_requested.each do |service_id, service_impl| -%>
+
+
+<% if service_id == "friends" -%>
+
+<% if service_impl == "restful" -%>
+FRIEND_SERVICE_URL = "http://<%= @service_definition[service_id][service_impl]['url'] %>/<%= node[:rawiron][:app] %>/"
+<% else -%>
+MODEL_SERVICES.update( {
+    'friends': "<%= @service_definition[service_id][service_impl] %>",
+} )
+<% end -%>
+
+
+<% elsif service_id == "facebook:user" -%>
+MODEL_SERVICES.update( {
+    'facebook': "<%= @service_definition[service_id][service_impl] %>",  
+} )
+
+<% elsif service_id == "facebook:graph" -%>
+<% if service_impl == "restful" -%>
+FACEBOOK_URL = "http://<%= @service_definition[service_id][service_impl]['url'] %>/"
+<% end -%>
+
+
+<% elsif service_id == "gamestate" -%>
+MODEL_SERVICES.update( {
+    'persistence': "<%= @service_definition[service_id][service_impl] %>",
+} )
+
+
+<% elsif service_id == "user:game_user" -%>
+MODEL_SERVICES.update( {
+    'game_user': "<%= @service_definition[service_id][service_impl] %>",  
+} )
+
+
+<% elsif service_id == "user:unregistered" -%>
+MODEL_SERVICES.update( {  
+    'unregistered': "<%= @service_definition[service_id][service_impl] %>",
+} )
+
+
+<% elsif service_id == "user:session" -%>
+MODEL_SERVICES.update( {
+    'session': "<%= @service_definition[service_id][service_impl] %>",
+} )
+
+
+<% elsif service_id == "user:authentication" -%>
+MODEL_SERVICES.update( {
+    'authentication': "<%= @service_definition[service_id][service_impl] %>",
+} )
+
+<% end -%>
+
+
+<% end -%>

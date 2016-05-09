@@ -1,9 +1,11 @@
 # Custom Chef Recipes for Amazon Opsworks
 
-* These scripts were coded to load test various infrastructure configurations.
+These scripts were coded to load test various infrastructure configurations.
 For example *Nginx* as a Loadbalancer, or *Basho-Riak* as a database server.
-* The application servers run Python-Django.
-* _cookbooks_ are written as wrappers around the underlying cookbooks from [Supermarket](https://supermarket.chef.io/).
+
+The application servers run Python-Django.
+
+_cookbooks_ are written as wrappers around the underlying cookbooks from [Supermarket](https://supermarket.chef.io/).
 
 In case you use ELB as a loadbalancer and a fixed number of database servers these scripts are of little help.
 Or as a picture, if your stack looks like this:
