@@ -58,7 +58,7 @@ template "configure riak_agent" do
 	group "root"
 	mode 0644
 	variables(
-		:guid => "com.fathom.riak_agent"
+		:guid => "com.rawiron.riak_agent"
 	)
 end
 =end

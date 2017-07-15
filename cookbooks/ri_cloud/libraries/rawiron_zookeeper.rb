@@ -64,7 +64,7 @@ module VirtualMachine
 		end
 		
 		def self.fqdn(config)
-			"#{config['hostname']}.#{config['fathom']['fqdn']}" 
+			"#{config['hostname']}.#{config['rawiron']['fqdn']}" 
 		end
 	end
 end
